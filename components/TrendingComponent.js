@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
 import Axios from 'axios';
-import { Card } from 'react-native-paper';
-import { Row, Col, H1,H2, H3 } from 'native-base';
-import { StatusBar } from 'expo-status-bar';
+import { Card, ActivityIndicator } from 'react-native-paper';
+import { Row, Col, H1, H3 } from 'native-base';
 
 class TrendingComponent extends Component {
 
@@ -13,6 +12,8 @@ class TrendingComponent extends Component {
             trendingDataBase:[],
             trendingTVShows:[],
             trendingMovies:[],
+            activityIndicator:true,
+            error:false,
         };
     }
 
@@ -31,9 +32,12 @@ class TrendingComponent extends Component {
 
         Axios.get('https://api.themoviedb.org/3/trending/tv/day?api_key=157f003029ac5165035364d81295e48e&page=1')
         .then((res)=>{
-            this.setState({trendingTVShows:res.data.results});
+            this.setState({trendingTVShows:res.data.results,activityIndicator:false});
         })
-        .catch((err)=>console.log(err));
+        .catch((err)=>{
+            console.log(err);
+            this.setState({activityIndicator:false,error:true});
+        });
     }
 
     render(){
@@ -101,9 +105,9 @@ class TrendingComponent extends Component {
             }
         }
 
+        if(this.state.trendingDataBase.length!==0 && this.state.trendingMovies.length!==0 && this.state.trendingTVShows.length!==0)
         return(
             <ScrollView style={{backgroundColor:"#000000"}}>
-                <StatusBar />
                 <Row style={{marginTop:20}}>
                     <H1 style={{color:"#fff"}}>Weekly Update</H1>
                 </Row>
@@ -151,7 +155,27 @@ class TrendingComponent extends Component {
                 </Row>
             </ScrollView>
         );
+
+        if(this.state.activityIndicator)
+            return(
+                <ScrollView style={Styles.container}>
+                    <ActivityIndicator animating={true} size="large" color="#E74C3C"/>
+                </ScrollView>
+            );
+        else{
+            return(
+                <ScrollView style={Styles.container}>
+                    <Text>Error something went Wrong</Text>
+                </ScrollView>
+            );
+        }
     }
 }
+
+const Styles = StyleSheet.create({
+    container:{
+        backgroundColor:"#000000",
+    }
+})
 
 export default TrendingComponent;
