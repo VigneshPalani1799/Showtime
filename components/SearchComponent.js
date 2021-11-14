@@ -1,49 +1,31 @@
 import React, { Component } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Axios from 'axios';
-import { Card, ActivityIndicator, Badge } from 'react-native-paper';
+import { Card, ActivityIndicator, Badge, Searchbar } from 'react-native-paper';
 import { Row, Col, H1, H3, Icon } from 'native-base';
 
-class TrendingComponent extends Component {
+class SearchComponent extends Component{
 
     constructor(props){
         super(props);
         this.state = {
-            trendingDataBase:[], //Get trending tv shows and movies
-            trendingTVShows:[], //Get trending tv shows
-            trendingMovies:[], //Get trending Movies
-            activityIndicator:true, //To show loading animation
-            error:false, //Is Error in fetching data
-        };
+            query:'',
+            activityIndicator:false,
+            searchResult:[],
+            error:true,
+            totalPage:0,
+        }
     }
 
-    //get top movies shows and both initially
-    componentDidMount(){
-        Axios.get('https://api.themoviedb.org/3/trending/all/day?api_key=157f003029ac5165035364d81295e48e&page=1')
-        .then((res)=>{
-            this.setState({trendingDataBase:res.data.results});
-        })
-        .catch((err)=>console.log(err));
-
-        Axios.get('https://api.themoviedb.org/3/trending/movie/day?api_key=157f003029ac5165035364d81295e48e&page=1')
-        .then((res)=>{
-            this.setState({trendingMovies:res.data.results});
-        })
-        .catch((err)=>console.log(err));
-
-        Axios.get('https://api.themoviedb.org/3/trending/tv/day?api_key=157f003029ac5165035364d81295e48e&page=1')
-        .then((res)=>{
-            this.setState({trendingTVShows:res.data.results,activityIndicator:false});
-        })
-        .catch((err)=>{
-            console.log(err);
-            this.setState({activityIndicator:false,error:true});
-        });
+    updateSearch(){
+        this.setState({activityIndicator:true,error:false});
+        Axios.get(`https://api.themoviedb.org/3/search/multi?api_key=157f003029ac5165035364d81295e48e&language=en-US&query=${this.state.query}`)
+        .then((res)=>this.setState({searchResult:res.data.results,activityIndicator:false,totalPage:res.data.total_pages}))
+        .catch(err => this.setState({activityIndicator:false,error:true}));
     }
 
     render(){
 
-        //This renders the first column elements
         const RenderTrending_0 = ({trendingDataBase}) => {
             if(trendingDataBase!==null){
                 return(
@@ -130,82 +112,108 @@ class TrendingComponent extends Component {
                 );
             }
         }
-
-        //If the data is fetched from the api then render all the trending...
-        if(this.state.trendingDataBase.length!==0 && this.state.trendingMovies.length!==0 && this.state.trendingTVShows.length!==0)
+        if(this.state.searchResult.length!==0 && !this.state.activityIndicator)
         return(
-            <ScrollView style={{backgroundColor:"#000000"}}>
-                <Row style={{marginTop:20}}>
-                    <H1 style={{color:"#fff"}}>Weekly Update</H1>
-                </Row>
-                <Row style={{marginBottom:10}}>
-                    <H3 style={{color:"#fff"}}>Top Movies, and TV Shows</H3>
-                </Row>
+            <ScrollView style={{backgroundColor:"#000"}}>
+                <Searchbar 
+                    placeholder="Search"
+                    placeholderTextColor="#E74C3C"
+                    inputStyle={{
+                        color:"#000",
+                    }}
+                    value = {this.state.query}
+                    onChangeText = {query=>{
+                        this.setState({query:query})
+                        this.updateSearch();
+                    }}
+                    iconColor="#E74C3C"
+                />
                 <Row>
                     <Col>
-                        <RenderTrending_0 trendingDataBase = {this.state.trendingDataBase} />
+                        <RenderTrending_0 trendingDataBase = {this.state.searchResult} />
                     </Col>
                     <Col>
-                        <RenderTrending_1 trendingDataBase = {this.state.trendingDataBase} />
+                        <RenderTrending_1 trendingDataBase = {this.state.searchResult} />
                     </Col>
                     <Col>
-                        <RenderTrending_2 trendingDataBase = {this.state.trendingDataBase} />
+                        <RenderTrending_2 trendingDataBase = {this.state.searchResult} />
                     </Col>
                 </Row>
-                <Row style={{marginTop:30}}>
-                    <H3 style={{color:"#fff"}}>Top Movies this Week</H3>
-                </Row>
+                <Row></Row>
                 <Row>
                     <Col>
-                        <RenderTrending_0 trendingDataBase = {this.state.trendingMovies} />
+                        <Icon name="chevron-left" type="FontAwesome" style={{color:"#fff"}}/>
                     </Col>
+                    <Col></Col>
                     <Col>
-                        <RenderTrending_1 trendingDataBase = {this.state.trendingMovies} />
-                    </Col>
-                    <Col>
-                        <RenderTrending_2 trendingDataBase = {this.state.trendingMovies} />
-                    </Col>
-                </Row>
-                <Row style={{marginTop:30}}>
-                    <H3 style={{color:"#fff"}}>Top TV Shows this Week</H3>
-                </Row>
-                <Row>
-                    <Col>
-                        <RenderTrending_0 trendingDataBase = {this.state.trendingTVShows} />
-                    </Col>
-                    <Col>
-                        <RenderTrending_1 trendingDataBase = {this.state.trendingTVShows} />
-                    </Col>
-                    <Col>
-                        <RenderTrending_2 trendingDataBase = {this.state.trendingTVShows} />
                     </Col>
                 </Row>
             </ScrollView>
         );
-
-        //If still not fetched and no error faced then show loading animation..
-        if(this.state.activityIndicator)
+        else if(this.state.activityIndicator && !this.state.error){
             return(
-                <ScrollView style={Styles.container}>
-                    <ActivityIndicator animating={true} size="large" color="#E74C3C"/>
+                <ScrollView style={{backgroundColor:"#000"}}>
+                    <Searchbar 
+                    placeholder="Search"
+                    placeholderTextColor="#E74C3C"
+                    inputStyle={{
+                        color:"#000",
+                    }}
+                    value = {this.state.query}
+                    onChangeText = {query=>{
+                        this.setState({query:query})
+                        this.updateSearch();
+                    }}
+                    iconColor="#E74C3C"
+                />
+                    <ActivityIndicator animating={this.state.activityIndicator} color="#E74C3C" size="large"/>
                 </ScrollView>
             );
-        
-        //If error in fetching data then display error.
+        }
+        else if(this.state.error){
+            return(
+                <ScrollView style={{backgroundColor:"#000"}}>
+                    <Searchbar 
+                    placeholder="Search"
+                    placeholderTextColor="#E74C3C"
+                    inputStyle={{
+                        color:"#000",
+                    }}
+                    value = {this.state.query}
+                    onChangeText = {query=>{
+                        this.setState({query:query})
+                        this.updateSearch();
+                    }}
+                    iconColor="#E74C3C"
+                />
+                <Row>
+                    <Col>
+                        <H3>No movies found</H3>
+                    </Col>
+                </Row>
+                </ScrollView>
+            );
+        }
         else{
             return(
-                <ScrollView style={Styles.container}>
-                    <Text>Error something went Wrong</Text>
-                </ScrollView>
+                <ScrollView style={{backgroundColor:"#000"}}>
+                    <Searchbar 
+                        placeholder="Search"
+                        placeholderTextColor="#E74C3C"
+                        inputStyle={{
+                            color:"#000",
+                        }}
+                        value = {this.state.query}
+                        onChangeText = {query=>{
+                            this.setState({query:query})
+                            this.updateSearch();
+                        }}
+                        iconColor="#E74C3C"
+                    />
+                </ScrollView>  
             );
         }
     }
 }
 
-const Styles = StyleSheet.create({
-    container:{
-        backgroundColor:"#000000",
-    }
-})
-
-export default TrendingComponent;
+export default SearchComponent;

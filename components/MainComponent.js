@@ -1,13 +1,13 @@
 import React , {Component} from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 
-import StackNavigation from './Navigation/StackNavigation';
+import TabNavigation from './Navigation/BottomNavigation';
 
 class MainComponent extends Component{
     render(){
         return(
             <NavigationContainer>
-                <StackNavigation/>
+                <TabNavigation/>
             </NavigationContainer>
         );
     }
